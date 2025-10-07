@@ -77,7 +77,7 @@ def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
         df["SMA20"] = df["Close"].rolling(20).mean()
         df["SMA50"] = df["Close"].rolling(50).mean()
         df["EMA20"] = df["Close"].ewm(span=20).mean()
-        df["EMA50"] = df["Close"].ewm(span=50).mean()
+        df["EMA50"] = df["Close"].ewm(span=50).me QQan()
         df["RSI14"] = pd.Series(np.nan, index=df.index)
         df["MACD"] = pd.Series(np.nan, index=df.index)
         df["ATR14"] = (df["High"] - df["Low"]).rolling(14).mean()
@@ -233,17 +233,7 @@ def fetch_binance_data(symbol="BTCUSDT", interval="1h", limit=800):
         "Volume": "Volume"
     }, inplace=True)
     return data.tail(limit)
-        cols = ["open_time","Open","High","Low","Close","Volume","close_time","q","n","taker_base","taker_quote","ignore"]
-        df = pd.DataFrame(data, columns=cols)
-        df["Date"] = pd.to_datetime(df["open_time"], unit='ms')
-        df = df[["Date","Open","High","Low","Close","Volume"]]
-        for c in ["Open","High","Low","Close","Volume"]:
-            df[c] = pd.to_numeric(df[c], errors="coerce")
-        return df
-    except Exception as e:
-        st.warning(f"Binance fetch failed: {e}")
-        return pd.DataFrame()
-
+    
 # -------------------------
 # Fundamental / RSS + sentiment
 # -------------------------
