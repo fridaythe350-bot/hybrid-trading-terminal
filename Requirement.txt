@@ -1,0 +1,7 @@
+streamlit
+pandas==2.2.2
+numpy==1.26.4
+yfinance
+pandas_ta==0.4.71b0
+plotly
+openpyxl
