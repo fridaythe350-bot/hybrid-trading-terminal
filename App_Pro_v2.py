@@ -2,10 +2,9 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
-from datetime import datetime
 
 # =========================
-# CONFIGURASI APLIKASI
+# KONFIGURASI APLIKASI
 # =========================
 st.set_page_config(
     page_title="💹 Hybrid Trading Terminal Pro v2",
@@ -14,7 +13,7 @@ st.set_page_config(
 )
 
 # =========================
-# TEMA MODE (Light / Dark)
+# PILIHAN TEMA
 # =========================
 theme_mode = st.sidebar.radio("🎨 Pilih Tema", ["Light", "Dark"])
 template_plot = "plotly_dark" if theme_mode == "Dark" else "plotly_white"
@@ -27,7 +26,8 @@ def fetch_data(symbol="BTC-USD", interval="1h", period="60d"):
     try:
         df = yf.download(symbol, interval=interval, period=period)
         df.reset_index(inplace=True)
-        df.rename(columns={"Datetime": "Date"}, inplace=True)
+        if "Datetime" in df.columns:
+            df.rename(columns={"Datetime": "Date"}, inplace=True)
         return df
     except Exception as e:
         st.error(f"Gagal mengambil data {symbol}: {e}")
@@ -37,22 +37,23 @@ btc_df = fetch_data("BTC-USD", "1h", "60d")
 xau_df = fetch_data("XAUUSD=X", "4h", "60d")
 
 # =========================
-# INDIKATOR
+# INDIKATOR TEKNIKAL
 # =========================
+def compute_rsi(series, period=14):
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
 def add_indicators(df):
     df["EMA20"] = df["Close"].ewm(span=20).mean()
     df["EMA50"] = df["Close"].ewm(span=50).mean()
     df["RSI"] = compute_rsi(df["Close"], 14)
     return df
-
-def compute_rsi(series, period=14):
-    delta = series.diff()
-    gain = delta.where(delta > 0, 0)
-    loss = -delta.where(delta < 0, 0)
-    avg_gain = gain.rolling(period).mean()
-    avg_loss = loss.rolling(period).mean()
-    rs = avg_gain / avg_loss
-    return 100 - (100 / (1 + rs))
 
 btc_df = add_indicators(btc_df)
 xau_df = add_indicators(xau_df)
@@ -67,7 +68,11 @@ def detect_pattern(df):
     last = df.iloc[-1]
     prev = df.iloc[-2]
 
-    open_, close, high, low = last["Open"], last["Close"], last["High"], last["Low"]
+    open_ = float(last["Open"])
+    close = float(last["Close"])
+    high = float(last["High"])
+    low = float(last["Low"])
+
     body = abs(close - open_)
     upper_shadow = high - max(open_, close)
     lower_shadow = min(open_, close) - low
@@ -94,21 +99,18 @@ def analisa_narasi(df, pair_name):
     close = float(last["Close"])
     ema20 = float(last["EMA20"])
     ema50 = float(last["EMA50"])
+    rsi_value = last["RSI"]
 
-    # ✅ FIXED RSI error handling
     try:
-        rsi_value = last["RSI"]
-        if isinstance(rsi_value, (pd.Series, list, tuple)):
-            rsi_value = rsi_value.iloc[-1] if hasattr(rsi_value, "iloc") else rsi_value[-1]
-        rsi = float(rsi_value) if not pd.isna(rsi_value) else 50.0
+        rsi = float(rsi_value)
     except Exception:
         rsi = 50.0
 
     pattern = detect_pattern(df)
 
-    if close > ema20 > ema50:
+    if close > ema20 and ema20 > ema50:
         trend = "Bullish Kuat"
-    elif close < ema20 < ema50:
+    elif close < ema20 and ema20 < ema50:
         trend = "Bearish Kuat"
     else:
         trend = "Sideways"
@@ -127,11 +129,11 @@ def analisa_narasi(df, pair_name):
     - RSI: **{rsi_status}**
     - Pola Candlestick: **{pattern}**
 
-    💬 **Interpretasi:** Pasar menunjukkan kecenderungan {trend.lower()} dengan pola {pattern.lower()} dan kondisi RSI {rsi_status.lower()}.
+    💬 **Interpretasi:** Pasar {pair_name} menunjukkan kecenderungan {trend.lower()} dengan pola {pattern.lower()} dan RSI {rsi_status.lower()}.
     """
 
 # =========================
-# GRAFIK
+# GRAFIK CANDLESTICK
 # =========================
 def plot_chart(df, title):
     fig = go.Figure(data=[
@@ -155,10 +157,10 @@ def plot_chart(df, title):
     st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# UI UTAMA
+# TAMPILAN UTAMA
 # =========================
-st.title("💹 Hybrid Trading Terminal Pro v2")
-st.caption("Analisa Candlestick, EMA, RSI, dan Narasi Otomatis • Light/Dark Mode")
+st.title("💹 Hybrid Trading Terminal Pro v2 (Stabil)")
+st.caption("Analisa Candlestick, EMA, RSI, dan Narasi Otomatis • Tema Light/Dark")
 
 col1, col2 = st.columns(2)
 
@@ -179,4 +181,4 @@ with col2:
         st.warning("Data XAU/USD tidak tersedia.")
 
 st.markdown("---")
-st.caption("Dibuat dengan ❤️ oleh Windy Hafidz • Data dari Yahoo Finance • Streamlit Pro v2")
+st.caption("Dibuat dengan ❤️ oleh Windy Hafidz • Data: Yahoo Finance • Versi Stabil v2")
