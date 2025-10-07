@@ -41,6 +41,8 @@ xau_df = fetch_data_yahoo("XAUUSD=X", "4h", "60d")
 # FUNGSI TEKNIKAL
 # =========================
 def add_indicators(df):
+    if df.empty:
+        return df
     df["EMA20"] = df["Close"].ewm(span=20).mean()
     df["EMA50"] = df["Close"].ewm(span=50).mean()
     return df
@@ -54,20 +56,22 @@ xau_df = add_indicators(xau_df)
 def analisa_narasi(df, pair_name):
     if df.empty:
         return f"Tidak ada data untuk {pair_name}."
-    last = df.iloc[-1]
-    ema20, ema50, close = last["EMA20"], last["EMA50"], last["Close"]
+    
+    last_close = df["Close"].iloc[-1]
+    last_ema20 = df["EMA20"].iloc[-1]
+    last_ema50 = df["EMA50"].iloc[-1]
 
-    if close > ema20 > ema50:
+    if last_close > last_ema20 > last_ema50:
         kondisi = "bullish kuat"
         narasi = f"Harga {pair_name} sedang berada dalam tren **naik (bullish)** yang kuat. EMA20 dan EMA50 mendukung momentum positif."
-    elif close < ema20 < ema50:
+    elif last_close < last_ema20 < last_ema50:
         kondisi = "bearish kuat"
         narasi = f"Harga {pair_name} sedang dalam tren **turun (bearish)**. EMA menunjukkan tekanan jual mendominasi pasar."
     else:
         kondisi = "sideways"
         narasi = f"Harga {pair_name} bergerak **sideways**. Belum ada dominasi antara pembeli dan penjual."
 
-    return f"📊 **Analisa {pair_name}:**\n\nHarga terakhir: **{close:.2f}** USD.\nKondisi pasar: **{kondisi}**.\n{narasi}"
+    return f"📊 **Analisa {pair_name}:**\n\nHarga terakhir: **{last_close:.2f}** USD.\nKondisi pasar: **{kondisi}**.\n{narasi}"
 
 # =========================
 # GRAFIK CANDLESTICK
