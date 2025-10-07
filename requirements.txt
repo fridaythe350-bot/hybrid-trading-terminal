@@ -1,11 +1,11 @@
-# Core
-streamlit
-yfinance
-pandas
-numpy
+# Core dependencies
+streamlit==1.31.0
+yfinance==0.2.44
+pandas==2.2.2
+numpy==1.26.4
 requests
 pandas_ta
-plotly
+plotly==5.22.0
 beautifulsoup4
 lxml
 
@@ -16,5 +16,5 @@ seaborn
 # Optional ML/Fundamental enhancement
 scikit-learn
 
-# For date and time utilities
+# Date and time utilities
 python-dateutil
