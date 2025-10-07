@@ -6,3 +6,4 @@ matplotlib
 plotly
 requests
 ta
+pandas_ta
