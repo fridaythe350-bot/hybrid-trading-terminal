@@ -216,13 +216,23 @@ def df_to_excel_bytes(df: pd.DataFrame) -> bytes:
 # -------------------------
 # Broker / Exchange fetchers
 # -------------------------
-def fetch_binance_ohlcv(symbol="BTCUSDT", interval="1h", limit=500):
-    url = "https://api.binance.com/api/v3/klines"
-    params = {"symbol": symbol, "interval": interval, "limit": limit}
-    try:
-        r = requests.get(url, params=params, timeout=10)
-        r.raise_for_status()
-        data = r.json()
+import yfinance as yf
+import pandas as pd
+
+def fetch_binance_data(symbol="BTCUSDT", interval="1h", limit=800):
+    # Ganti USDT ke USD agar cocok dengan format Yahoo Finance
+    ticker = symbol.replace("USDT", "-USD")
+    data = yf.download(ticker, period="60d", interval=interval)
+    data.reset_index(inplace=True)
+    data.rename(columns={
+        "Datetime": "Date",
+        "Open": "Open",
+        "High": "High",
+        "Low": "Low",
+        "Close": "Close",
+        "Volume": "Volume"
+    }, inplace=True)
+    return data.tail(limit)
         cols = ["open_time","Open","High","Low","Close","Volume","close_time","q","n","taker_base","taker_quote","ignore"]
         df = pd.DataFrame(data, columns=cols)
         df["Date"] = pd.to_datetime(df["open_time"], unit='ms')
