@@ -130,7 +130,10 @@ def analisa_narasi(df, pair_name):
     close = float(last["Close"])
     ema20 = float(last["EMA20"])
     ema50 = float(last["EMA50"])
-    rsi = float(last["RSI"]) if not pd.isna(last["RSI"]) else 50.0
+
+    # Tangani RSI aman
+    rsi_value = last["RSI"]
+    rsi = float(rsi_value) if pd.notna(rsi_value) else 50.0
 
     # Ambil pola candlestick terakhir
     pattern = detect_pattern(df)
