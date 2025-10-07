@@ -62,31 +62,28 @@ xau_df = add_indicators(xau_df)
 # DETEKSI POLA
 # =========================
 def detect_pattern(df):
+    """Deteksi pola candlestick sederhana berdasarkan dua candle terakhir"""
     if len(df) < 2:
         return "Data tidak cukup"
 
-    last = df.iloc[-1]
     prev = df.iloc[-2]
+    last = df.iloc[-1]
 
     open_ = float(last["Open"])
     close = float(last["Close"])
-    high = float(last["High"])
-    low = float(last["Low"])
+    prev_open = float(prev["Open"])
+    prev_close = float(prev["Close"])
 
-    body = abs(close - open_)
-    upper_shadow = high - max(open_, close)
-    lower_shadow = min(open_, close) - low
-
-    if body < (upper_shadow + lower_shadow) * 0.3:
-        return "Doji"
-    elif lower_shadow > body * 2 and close > open_:
-        return "Hammer"
-    elif close > prev["Open"] and open_ < prev["Close"]:
+    if close > open_ and prev_close < prev_open and close > prev_open and open_ < prev_close:
         return "Bullish Engulfing"
-    elif close < prev["Open"] and open_ > prev["Close"]:
+    elif close < open_ and prev_close > prev_open and close < prev_open and open_ > prev_close:
         return "Bearish Engulfing"
+    elif close > open_:
+        return "Bullish Candle"
+    elif close < open_:
+        return "Bearish Candle"
     else:
-        return "Tidak ada pola signifikan"
+        return "Doji"
 
 # =========================
 # ANALISA NARASI
