@@ -90,24 +90,33 @@ xau_df = add_indicators(xau_df)
 # DETEKSI POLA CANDLE
 # ============================================
 def detect_pattern(df):
-    last = df.iloc[-1]
-    open_, close, high, low = last["Open"], last["Close"], last["High"], last["Low"]
+    # Pastikan dataframe tidak kosong
+    if df.empty:
+        return "Data kosong"
 
+    # Ambil baris terakhir sebagai nilai float
+    last = df.iloc[-1]
+    open_ = float(last["Open"])
+    close = float(last["Close"])
+    high = float(last["High"])
+    low = float(last["Low"])
+
+    # Hitung body dan shadow
     body = abs(close - open_)
     upper_shadow = high - max(open_, close)
     lower_shadow = min(open_, close) - low
 
+    # Deteksi pola
     if body < (high - low) * 0.25 and upper_shadow > body * 2 and lower_shadow > body * 2:
         return "Doji"
-    elif close > open_ and (close - open_) > (open_ - low)*2:
+    elif close > open_ and (close - open_) > (open_ - low) * 2:
         return "Bullish Engulfing"
-    elif open_ > close and (open_ - close) > (high - open_)*2:
+    elif open_ > close and (open_ - close) > (high - open_) * 2:
         return "Bearish Engulfing"
     elif lower_shadow > body * 2 and close > open_:
         return "Hammer"
     else:
         return "Tidak ada pola kuat"
-
 # ============================================
 # NARASI OTOMATIS
 # ============================================
