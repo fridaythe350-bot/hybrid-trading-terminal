@@ -425,4 +425,4 @@ with col1:
             st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("### 🔎 Latest Signals")
-        recent_cols = ["Date","Close","Pattern","Pattern_Strength","Pattern_Reason","S
+        recent_cols = ["Date","Close","Pattern","Pattern_Strength","Pattern_Reason","Signal"]
