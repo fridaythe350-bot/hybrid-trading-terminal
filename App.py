@@ -77,7 +77,7 @@ def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
         df["SMA20"] = df["Close"].rolling(20).mean()
         df["SMA50"] = df["Close"].rolling(50).mean()
         df["EMA20"] = df["Close"].ewm(span=20).mean()
-        df["EMA50"] = df["Close"].ewm(span=50).me QQan()
+        df["EMA50"] = df["Close"].ewm(span=50).mean()
         df["RSI14"] = pd.Series(np.nan, index=df.index)
         df["MACD"] = pd.Series(np.nan, index=df.index)
         df["ATR14"] = (df["High"] - df["Low"]).rolling(14).mean()
