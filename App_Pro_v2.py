@@ -121,11 +121,21 @@ def detect_pattern(df):
 # NARASI OTOMATIS
 # ============================================
 def analisa_narasi(df, pair_name):
+    if df.empty:
+        return f"Tidak ada data untuk {pair_name}."
+
     last = df.iloc[-1]
-    close, ema20, ema50, rsi = last["Close"], last["EMA20"], last["EMA50"], last["RSI"]
+
+    # Pastikan semua nilai numerik tunggal, bukan Series
+    close = float(last["Close"])
+    ema20 = float(last["EMA20"])
+    ema50 = float(last["EMA50"])
+    rsi = float(last["RSI"]) if not pd.isna(last["RSI"]) else 50.0
+
+    # Ambil pola candlestick terakhir
     pattern = detect_pattern(df)
 
-    # Trend
+    # Tentukan tren
     if close > ema20 > ema50:
         trend = "Bullish Kuat"
     elif close < ema20 < ema50:
@@ -133,7 +143,7 @@ def analisa_narasi(df, pair_name):
     else:
         trend = "Sideways"
 
-    # RSI
+    # Tentukan RSI
     if rsi > 70:
         rsi_status = "Overbought (rawan koreksi)"
     elif rsi < 30:
@@ -149,7 +159,7 @@ def analisa_narasi(df, pair_name):
     - RSI: **{rsi_status}**
     - Pola Candlestick: **{pattern}**
 
-    💬 **Interpretasi:** Pasar menunjukkan kecenderungan {trend.lower()} dengan sinyal {pattern.lower()}. RSI mengindikasikan kondisi {rsi_status.lower()}. 
+    💬 **Interpretasi:** Pasar menunjukkan kecenderungan {trend.lower()} dengan sinyal {pattern.lower()}. RSI mengindikasikan kondisi {rsi_status.lower()}.
     """
 
 # ============================================
