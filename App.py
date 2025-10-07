@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
-from datetime import datetime
 
 # =========================
 # CONFIGURASI DASAR APLIKASI
@@ -56,10 +55,11 @@ xau_df = add_indicators(xau_df)
 def analisa_narasi(df, pair_name):
     if df.empty:
         return f"Tidak ada data untuk {pair_name}."
-    
-    last_close = df["Close"].iloc[-1]
-    last_ema20 = df["EMA20"].iloc[-1]
-    last_ema50 = df["EMA50"].iloc[-1]
+
+    # pastikan semua nilai berupa angka float
+    last_close = float(df["Close"].iloc[-1])
+    last_ema20 = float(df["EMA20"].iloc[-1])
+    last_ema50 = float(df["EMA50"].iloc[-1])
 
     if last_close > last_ema20 > last_ema50:
         kondisi = "bullish kuat"
@@ -77,6 +77,10 @@ def analisa_narasi(df, pair_name):
 # GRAFIK CANDLESTICK
 # =========================
 def plot_chart(df, title):
+    if df.empty:
+        st.warning("Data tidak tersedia untuk ditampilkan.")
+        return
+
     fig = go.Figure(data=[
         go.Candlestick(
             x=df["Date"],
