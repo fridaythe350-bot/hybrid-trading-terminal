@@ -178,4 +178,4 @@ with col2:
         st.warning("Data XAU/USD tidak tersedia.")
 
 st.markdown("---")
-st.caption("Dibuat dengan ❤️ oleh Windy Hafidz • Data: Yahoo Finance • Versi Stabil v2")
+st.caption("Dibuat dengan ❤️ oleh dc_Fredy01• Data: Yahoo Finance • Versi Stabil v2")
