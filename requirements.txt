@@ -1,7 +1,20 @@
+# Core
 streamlit
 yfinance
-pandas==2.2.2
-numpy==1.26.4
-pandas_ta==0.4.71b0
+pandas
+numpy
+requests
+pandas_ta
 plotly
-openpyxl
+beautifulsoup4
+lxml
+
+# Optional visual enhancements
+matplotlib
+seaborn
+
+# Optional ML/Fundamental enhancement
+scikit-learn
+
+# For date and time utilities
+python-dateutil
