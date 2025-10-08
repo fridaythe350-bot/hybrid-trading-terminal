@@ -8,3 +8,5 @@ pandas_ta
 openpyxl
 feedparser
 vaderSentiment
+beautifulsoup4
+lxml
