@@ -1,32 +1,21 @@
 # Core
-streamlit==1.37.0
-yfinance==0.2.44
+streamlit==1.31.0
+plotly==5.24.0
 pandas==2.2.2
 numpy==1.26.4
-requests
-pandas_ta==0.4.3b0
-plotly==5.24.0
-beautifulsoup4
-lxml
-streamlit==1.37.0
-pandas==2.2.2
-numpy==1.26.4
-pandas_ta==0.4.3b0
-plotly==5.24.0
-yfinance==0.2.44
-streamlit==1.29.0
-pandas==1.5.3
-numpy==1.24.4
-plotly==5.15.0
-yfinance==0.2.31
-pandas_ta==0.3.14b0
+yfinance==0.2.43
+pandas_ta==0.4.71b0
+requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.2.1
+openpyxl==3.1.5
 
 # Optional visual enhancements
-matplotlib
-seaborn
+matplotlib==3.9.2
+seaborn==0.13.2
 
 # Optional ML/Fundamental enhancement
-scikit-learn
+scikit-learn==1.5.1
 
 # For date and time utilities
-python-dateutil
+python-dateutil==2.9.0
