@@ -1,7 +1,14 @@
+# ================================================
+# Streamlit Cloud Stable Configuration (v4.1)
+# Bahasa Indonesia | Python 3.13 | Dark Mode Default
+# ================================================
+
 [general]
+# Gunakan versi Python stabil untuk Streamlit Cloud
 python_version = "3.13"
 
 [theme]
+# Tema default (Dark Mode nyaman untuk chart)
 base = "dark"
 primaryColor = "#00b894"
 backgroundColor = "#0b1220"
@@ -10,6 +17,7 @@ textColor = "#f4f8ff"
 font = "sans serif"
 
 [server]
+# Hindari timeout pada server gratis
 headless = true
 enableCORS = false
 enableXsrfProtection = true
