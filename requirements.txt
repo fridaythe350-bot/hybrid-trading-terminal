@@ -8,6 +8,18 @@ pandas_ta==0.4.3b0
 plotly==5.24.0
 beautifulsoup4
 lxml
+streamlit==1.37.0
+pandas==2.2.2
+numpy==1.26.4
+pandas_ta==0.4.3b0
+plotly==5.24.0
+yfinance==0.2.44
+streamlit==1.29.0
+pandas==1.5.3
+numpy==1.24.4
+plotly==5.15.0
+yfinance==0.2.31
+pandas_ta==0.3.14b0
 
 # Optional visual enhancements
 matplotlib
