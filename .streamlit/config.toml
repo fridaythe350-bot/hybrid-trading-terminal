@@ -1,0 +1,20 @@
+[general]
+python_version = "3.13"
+
+[theme]
+base = "dark"
+primaryColor = "#00b894"
+backgroundColor = "#0b1220"
+secondaryBackgroundColor = "#141414"
+textColor = "#f4f8ff"
+font = "sans serif"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+port = 8501
+runOnSave = true
+
+[logger]
+level = "info"
