@@ -20,6 +20,8 @@ try:
     import pandas_ta as ta
 except Exception:
     ta = None
+    import warnings
+    warnings.warn("⚠️ pandas_ta tidak ditemukan, indikator dihitung manual.")
 try:
     import plotly.graph_objects as go
 except Exception:
