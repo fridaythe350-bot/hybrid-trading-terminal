@@ -1,6 +1,6 @@
 # =========================================
-# App.py v4.2 — Hybrid Terminal Pro (Replit Stable Edition)
-# Bahasa Indonesia penuh | Aman di Replit | Lengkap dengan fallback data
+# App.py v4.3 — Hybrid Terminal Pro (AI Insight Edition)
+# Bahasa Indonesia penuh | Aman di Replit | Dilengkapi Rekomendasi AI
 # =========================================
 
 import streamlit as st
@@ -23,9 +23,9 @@ except Exception:
 # ---------------------------
 # KONFIGURASI
 # ---------------------------
-st.set_page_config(page_title="Hybrid Terminal Pro v4.2", layout="wide")
-st.title("📊 Hybrid Terminal Pro v4.2 – Replit Stable Edition")
-st.caption("Analisa otomatis untuk XAU/USD, BTC/USD, dan forex pair lain (mode Replit aman).")
+st.set_page_config(page_title="Hybrid Terminal Pro v4.3 – AI Insight Edition", layout="wide")
+st.title("🤖 Hybrid Terminal Pro v4.3 – AI Insight Edition")
+st.caption("Analisa otomatis dengan rekomendasi AI (Buy / Sell / Hold) untuk Gold, Bitcoin, dan Forex.")
 
 # ---------------------------
 # SIDEBAR
@@ -34,7 +34,7 @@ with st.sidebar:
     st.header("⚙️ Pengaturan")
     tema = st.selectbox("Tema", ["Semi Dark", "Dark", "Light"], index=0)
     tf_label = st.selectbox("Time Frame", ["15 Menit", "1 Jam", "4 Jam", "1 Hari"], index=3)
-    tf_map = {"15 Menit":"15m", "1 Jam":"1h", "4 Jam":"4h", "1 Hari":"1d"}
+    tf_map = {"15 Menit": "15m", "1 Jam": "1h", "4 Jam": "4h", "1 Hari": "1d"}
     tf = tf_map[tf_label]
     aset = st.selectbox("Aset", ["XAU/USD (Gold)", "BTC/USD", "EUR/USD", "GBP/USD", "USD/JPY"])
     range_hist = st.selectbox("Rentang Data", ["6mo", "1y", "2y"], index=1)
@@ -90,7 +90,7 @@ def ambil_data(sym, period, interval):
         return df
 
 # ---------------------------
-# HITUNG INDIKATOR
+# INDIKATOR
 # ---------------------------
 def indikator(df):
     df["EMA20"] = df["Close"].ewm(span=20, adjust=False).mean()
@@ -105,6 +105,23 @@ def indikator(df):
     df["MACD"] = ema12 - ema26
     df["Signal"] = df["MACD"].ewm(span=9, adjust=False).mean()
     return df
+
+# ---------------------------
+# AI INSIGHT (Buy/Sell/Hold)
+# ---------------------------
+def ai_rekomendasi(df):
+    """Logika sederhana: RSI dan MACD dikombinasikan"""
+    last = df.iloc[-1]
+    rsi = last["RSI"]
+    macd = last["MACD"]
+    signal = last["Signal"]
+
+    if rsi < 30 and macd > signal:
+        return "BUY", "📈 RSI rendah (oversold) dan MACD mulai naik — peluang beli potensial."
+    elif rsi > 70 and macd < signal:
+        return "SELL", "📉 RSI tinggi (overbought) dan MACD melemah — potensi penurunan harga."
+    else:
+        return "HOLD", "⏸️ Pasar masih netral, tunggu konfirmasi tren berikutnya."
 
 # ---------------------------
 # GRAFIK
@@ -153,13 +170,24 @@ if "data" in st.session_state:
         st.subheader("📰 Berita Fundamental")
         try:
             url = f"https://finance.yahoo.com/quote/{symbol}/news"
-            page = requests.get(url, headers={"User-Agent":"Mozilla/5.0"})
+            page = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
             soup = BeautifulSoup(page.text, "lxml")
             items = soup.select("h3 a")[:5]
             for a in items:
                 st.markdown(f"- [{a.text.strip()}](https://finance.yahoo.com{a.get('href')})")
         except Exception:
             st.info("Tidak dapat mengambil berita saat ini.")
+
+    # AI Insight
+    st.markdown("---")
+    st.subheader("🤖 Rekomendasi AI Insight")
+    rekom, narasi = ai_rekomendasi(df)
+    if rekom == "BUY":
+        st.success(f"🟢 {rekom} — {narasi}")
+    elif rekom == "SELL":
+        st.error(f"🔴 {rekom} — {narasi}")
+    else:
+        st.info(f"🟡 {rekom} — {narasi}")
 
     if show_notes:
         st.subheader("📝 Catatan Pribadi")
