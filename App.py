@@ -1,6 +1,6 @@
 # =========================================
-# App.py v4.1 — Hybrid Terminal Pro (Final Stable Cloud Edition)
-# Bahasa Indonesia penuh | Python 3.13 | Aman di Streamlit Cloud
+# App.py v4.2 — Hybrid Terminal Pro (Replit Stable Edition)
+# Bahasa Indonesia penuh | Aman di Replit | Lengkap dengan fallback data
 # =========================================
 
 import streamlit as st
@@ -9,62 +9,40 @@ import numpy as np
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
-import traceback
 
-# optional libraries (dengan fallback)
+# optional imports
 try:
     import yfinance as yf
 except Exception:
     yf = None
-    st.warning("⚠️ yfinance tidak ditemukan, menggunakan data dummy.")
-
-try:
-    import pandas_ta as ta
-except Exception:
-    ta = None
-    import warnings
-    warnings.warn("⚠️ pandas_ta tidak ditemukan, indikator dihitung manual.")
-
 try:
     import plotly.graph_objects as go
 except Exception:
     go = None
-    st.warning("⚠️ plotly tidak tersedia, grafik tidak dapat ditampilkan.")
 
 # ---------------------------
-# CONFIGURASI UTAMA
+# KONFIGURASI
 # ---------------------------
-st.set_page_config(page_title="Hybrid Terminal Pro v4.1", layout="wide")
-st.title("📊 Hybrid Terminal Pro v4.1 – Full Analysis (Final Stable)")
-st.caption("Analisa edukatif otomatis untuk XAU/USD, BTC/USD, dan forex pair lainnya.")
+st.set_page_config(page_title="Hybrid Terminal Pro v4.2", layout="wide")
+st.title("📊 Hybrid Terminal Pro v4.2 – Replit Stable Edition")
+st.caption("Analisa otomatis untuk XAU/USD, BTC/USD, dan forex pair lain (mode Replit aman).")
 
 # ---------------------------
 # SIDEBAR
 # ---------------------------
 with st.sidebar:
     st.header("⚙️ Pengaturan")
-    tema = st.selectbox("Tema Tampilan", ["Semi Dark", "Dark", "Light"], index=0)
-    st.markdown("---")
-    st.subheader("⏱️ Data & Time Frame")
-    auto_refresh = st.checkbox("🔄 Auto Refresh Data", value=False)
-    refresh_minutes = st.number_input("Interval (menit)", 1, 60, 15)
-    tf_label = st.selectbox("Pilih Time Frame", ["15 Menit", "1 Jam", "4 Jam", "1 Hari"], index=3)
-    tf_map = {"15 Menit": "15m", "1 Jam": "1h", "4 Jam": "4h", "1 Hari": "1d"}
+    tema = st.selectbox("Tema", ["Semi Dark", "Dark", "Light"], index=0)
+    tf_label = st.selectbox("Time Frame", ["15 Menit", "1 Jam", "4 Jam", "1 Hari"], index=3)
+    tf_map = {"15 Menit":"15m", "1 Jam":"1h", "4 Jam":"4h", "1 Hari":"1d"}
     tf = tf_map[tf_label]
-    st.markdown("---")
-    st.subheader("💰 Pilih Aset")
-    aset = st.selectbox(
-        "Aset",
-        ["XAU/USD (Gold)", "BTC/USD (Bitcoin)", "EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "Custom"]
-    )
-    custom_symbol = st.text_input("Masukkan symbol Yahoo Finance", value="EURUSD=X") if aset == "Custom" else None
-    range_hist = st.selectbox("Rentang data historis", ["6mo", "1y", "2y", "5y", "max"], index=1)
-    st.markdown("---")
-    st.subheader("📈 Opsi Tampilan")
-    enable_heikin = st.checkbox("Gunakan Heikin-Ashi", value=False)
+    aset = st.selectbox("Aset", ["XAU/USD (Gold)", "BTC/USD", "EUR/USD", "GBP/USD", "USD/JPY"])
+    range_hist = st.selectbox("Rentang Data", ["6mo", "1y", "2y"], index=1)
     show_notes = st.checkbox("Tampilkan Catatan Pribadi", value=True)
 
-# Tema CSS sederhana
+# ---------------------------
+# THEME CSS
+# ---------------------------
 if tema == "Dark":
     st.markdown("<style>body{background:#0b1220;color:#e6eef8;}</style>", unsafe_allow_html=True)
 elif tema == "Light":
@@ -73,173 +51,123 @@ else:
     st.markdown("<style>body{background:#141414;color:#f4f8ff;}</style>", unsafe_allow_html=True)
 
 # ---------------------------
-# AUTO REFRESH
-# ---------------------------
-now_utc = datetime.utcnow()
-if auto_refresh:
-    last = st.session_state.get("last_refresh_time")
-    if not last or (now_utc - last).total_seconds() > refresh_minutes * 60:
-        st.session_state["last_refresh_time"] = now_utc
-        st.session_state["trigger_refresh"] = True
-    else:
-        st.session_state["trigger_refresh"] = False
-else:
-    st.session_state["trigger_refresh"] = False
-
-# ---------------------------
 # MAP SIMBOL
 # ---------------------------
 symbol_map = {
     "XAU/USD (Gold)": "XAUUSD=X",
-    "BTC/USD (Bitcoin)": "BTC-USD",
+    "BTC/USD": "BTC-USD",
     "EUR/USD": "EURUSD=X",
     "GBP/USD": "GBPUSD=X",
-    "USD/JPY": "JPY=X",
-    "AUD/USD": "AUDUSD=X",
+    "USD/JPY": "JPY=X"
 }
-symbol = custom_symbol if custom_symbol else symbol_map.get(aset, "XAUUSD=X")
+symbol = symbol_map.get(aset, "XAUUSD=X")
 
 # ---------------------------
-# FUNGSI UNDUH DATA
+# AMBIL DATA
 # ---------------------------
 @st.cache_data(ttl=300)
-def safe_download(sym, period, interval):
-    """Download data aman dari Yahoo Finance, fallback dummy data"""
-    if yf is None:
-        st.warning("⚠️ yfinance tidak tersedia, gunakan data dummy.")
-        dates = pd.date_range(end=datetime.utcnow(), periods=200)
-        return pd.DataFrame({
-            "Open": np.random.uniform(2300, 2400, 200),
-            "High": np.random.uniform(2400, 2450, 200),
-            "Low": np.random.uniform(2250, 2350, 200),
-            "Close": np.random.uniform(2300, 2450, 200),
-            "Volume": np.random.randint(1000, 5000, 200)
-        }, index=dates)
+def ambil_data(sym, period, interval):
+    """Ambil data dari yfinance atau pakai dummy jika gagal"""
     try:
+        if yf is None:
+            raise Exception("yfinance tidak ditemukan")
+
         df = yf.download(sym, period=period, interval=interval, progress=False)
         if df.empty:
-            raise ValueError("Data kosong")
+            raise Exception("data kosong")
+
         return df
-    except Exception as e:
-        st.error(f"Gagal mengambil data: {e}")
+    except Exception:
+        st.warning(f"⚠️ Tidak bisa ambil data asli {sym}. Menggunakan data simulasi.")
         dates = pd.date_range(end=datetime.utcnow(), periods=200)
-        return pd.DataFrame({
-            "Open": np.random.uniform(2300, 2400, 200),
-            "High": np.random.uniform(2400, 2450, 200),
-            "Low": np.random.uniform(2250, 2350, 200),
-            "Close": np.random.uniform(2300, 2450, 200),
-            "Volume": np.random.randint(1000, 5000, 200)
+        df = pd.DataFrame({
+            "Open": np.random.uniform(2300,2400,200),
+            "High": np.random.uniform(2400,2450,200),
+            "Low": np.random.uniform(2250,2350,200),
+            "Close": np.random.uniform(2300,2450,200),
+            "Volume": np.random.randint(1000,5000,200)
         }, index=dates)
+        return df
 
 # ---------------------------
-# INDIKATOR
+# HITUNG INDIKATOR
 # ---------------------------
-def compute_indicators(df):
-    df = df.copy()
-    try:
-        df["SMA20"] = df["Close"].rolling(20).mean()
-        df["SMA50"] = df["Close"].rolling(50).mean()
-        df["EMA20"] = df["Close"].ewm(span=20, adjust=False).mean()
-        df["EMA50"] = df["Close"].ewm(span=50, adjust=False).mean()
-
-        # RSI manual
-        delta = df["Close"].diff()
-        up = delta.clip(lower=0)
-        down = -delta.clip(upper=0)
-        ma_up = up.ewm(alpha=1/14, adjust=False).mean()
-        ma_down = down.ewm(alpha=1/14, adjust=False).mean()
-        rs = ma_up / (ma_down + 1e-9)
-        df["RSI14"] = 100 - (100 / (1 + rs))
-
-        # MACD
-        ema12 = df["Close"].ewm(span=12, adjust=False).mean()
-        ema26 = df["Close"].ewm(span=26, adjust=False).mean()
-        df["MACD"] = ema12 - ema26
-        df["MACD_SIGNAL"] = df["MACD"].ewm(span=9, adjust=False).mean()
-    except Exception as e:
-        st.error(f"Gagal hitung indikator: {e}")
+def indikator(df):
+    df["EMA20"] = df["Close"].ewm(span=20, adjust=False).mean()
+    df["EMA50"] = df["Close"].ewm(span=50, adjust=False).mean()
+    delta = df["Close"].diff()
+    up = delta.clip(lower=0)
+    down = -delta.clip(upper=0)
+    rs = up.ewm(span=14).mean() / (down.ewm(span=14).mean() + 1e-9)
+    df["RSI"] = 100 - (100 / (1 + rs))
+    ema12 = df["Close"].ewm(span=12, adjust=False).mean()
+    ema26 = df["Close"].ewm(span=26, adjust=False).mean()
+    df["MACD"] = ema12 - ema26
+    df["Signal"] = df["MACD"].ewm(span=9, adjust=False).mean()
     return df
 
 # ---------------------------
 # GRAFIK
 # ---------------------------
-def plot_chart(df):
-    if go is None or df.empty:
-        st.warning("⚠️ Grafik tidak dapat ditampilkan.")
+def tampilkan_grafik(df):
+    if go is None:
+        st.warning("Plotly tidak tersedia.")
         return
     fig = go.Figure()
     fig.add_trace(go.Candlestick(
-        x=df.index,
-        open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"],
+        x=df.index, open=df["Open"], high=df["High"], low=df["Low"], close=df["Close"],
         increasing_line_color="#00b894", decreasing_line_color="#ff7675", name="Harga"
     ))
-    if "EMA20" in df: fig.add_trace(go.Scatter(x=df.index, y=df["EMA20"], name="EMA 20", line=dict(color="#00d1ff")))
-    if "SMA50" in df: fig.add_trace(go.Scatter(x=df.index, y=df["SMA50"], name="SMA 50", line=dict(color="#ff9f43")))
-    fig.update_layout(template="plotly_dark" if tema != "Light" else "plotly_white",
-                      xaxis_rangeslider_visible=False, height=600)
+    fig.add_trace(go.Scatter(x=df.index, y=df["EMA20"], line=dict(color="#00d1ff"), name="EMA20"))
+    fig.add_trace(go.Scatter(x=df.index, y=df["EMA50"], line=dict(color="#ff9f43"), name="EMA50"))
+    fig.update_layout(template="plotly_dark" if tema!="Light" else "plotly_white", height=600)
     st.plotly_chart(fig, use_container_width=True)
-
-# ---------------------------
-# BERITA FUNDAMENTAL
-# ---------------------------
-def fetch_yahoo_news(sym):
-    try:
-        base = "https://finance.yahoo.com/quote/"
-        path = sym.replace("=X", "-USD") if "=X" in sym else sym
-        url = f"{base}{path}/news"
-        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=8)
-        soup = BeautifulSoup(r.text, "lxml")
-        items = soup.select("h3 a")[:6]
-        return [(a.text.strip(), "https://finance.yahoo.com" + a.get("href", "")) for a in items]
-    except Exception:
-        return []
 
 # ---------------------------
 # TOMBOL MUAT DATA
 # ---------------------------
-trigger = st.button("🔁 Muat Data & Analisa Sekarang") or st.session_state.get("trigger_refresh", False)
-if trigger:
-    st.info("Mengambil data, harap tunggu...")
-    df = compute_indicators(safe_download(symbol, range_hist, tf))
-    st.session_state["data"] = df
-    st.session_state["last_refresh_time"] = now_utc
-    st.success("✅ Data & indikator berhasil dimuat.")
+if st.button("🔁 Muat Data & Analisa Sekarang"):
+    with st.spinner("Mengambil data, harap tunggu..."):
+        df = ambil_data(symbol, range_hist, tf)
+        df = indikator(df)
+        st.session_state["data"] = df
+        st.success("✅ Data & indikator berhasil dimuat.")
 
 # ---------------------------
-# TAMPILKAN
+# TAMPILAN UTAMA
 # ---------------------------
 if "data" in st.session_state:
     df = st.session_state["data"]
-    last_time = st.session_state.get("last_refresh_time")
-    st.markdown(f"✅ Data terakhir diperbarui: **{last_time.strftime('%d %b %Y %H:%M UTC')}**")
-    st.markdown(f"🕒 Time Frame: {tf_label} | Range: {range_hist}")
-    st.subheader(f"Grafik {aset}")
-    plot_chart(df)
+    st.markdown(f"🕒 Time Frame: **{tf_label}** | Range: **{range_hist}**")
+    tampilkan_grafik(df)
 
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("📊 Indikator Terbaru")
-        try:
-            last = df.tail(1).iloc[0]
-            st.metric("Close", f"{last['Close']:.2f}")
-            st.metric("RSI", f"{last['RSI14']:.2f}")
-            st.metric("MACD", f"{last['MACD']:.4f}")
-        except Exception:
-            st.warning("Data indikator belum siap.")
+        last = df.iloc[-1]
+        st.metric("Harga Terakhir", f"{last['Close']:.2f}")
+        st.metric("RSI (14)", f"{last['RSI']:.2f}")
+        st.metric("MACD", f"{last['MACD']:.4f}")
+
     with col2:
         st.subheader("📰 Berita Fundamental")
-        for title, link in fetch_yahoo_news(symbol):
-            st.markdown(f"- [{title}]({link})")
+        try:
+            url = f"https://finance.yahoo.com/quote/{symbol}/news"
+            page = requests.get(url, headers={"User-Agent":"Mozilla/5.0"})
+            soup = BeautifulSoup(page.text, "lxml")
+            items = soup.select("h3 a")[:5]
+            for a in items:
+                st.markdown(f"- [{a.text.strip()}](https://finance.yahoo.com{a.get('href')})")
+        except Exception:
+            st.info("Tidak dapat mengambil berita saat ini.")
 
     if show_notes:
-        st.markdown("---")
         st.subheader("📝 Catatan Pribadi")
         note_key = f"note_{symbol}"
         note_val = st.session_state.get(note_key, "")
         new_note = st.text_area("Tulis catatan:", value=note_val)
         if st.button("💾 Simpan Catatan"):
             st.session_state[note_key] = new_note
-            st.success("Catatan tersimpan sementara di session.")
+            st.success("Catatan tersimpan sementara.")
 else:
-    st.info("Tekan tombol **Muat Data & Analisa Sekarang** untuk memulai.")
-# rebuild 2025-10-08
+    st.info("Tekan tombol **Muat Data & Analisa Sekarang** untuk memulai analisa.")
